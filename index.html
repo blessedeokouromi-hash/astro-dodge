@@ -196,7 +196,7 @@
     <div id="gameover-screen" class="overlay hidden">
       <h1 class="game-title" style="background: linear-gradient(135deg, #ef4444 0%, #f97316 100%); -webkit-background-clip: text;">GAME OVER</h1>
       <p id="final-score-text" class="description">Final Score: 0</p>
-      <button id="bonus-btn" class="btn btn-bonus">CLAIM 2X BONUS SCORE 🚀</button>
+      <button id="bonus-btn" class="btn btn-bonus">GET EXTRA LIFE ❤️</button>
       <button id="restart-btn" class="btn btn-primary">PLAY AGAIN</button>
     </div>
   </div>
@@ -585,9 +585,14 @@
     startBtn.addEventListener("click", initGame);
     restartBtn.addEventListener("click", initGame);
 
-    // Smartlink Trigger Button
+    // Extra Life Bonus Trigger Button
     bonusBtn.addEventListener("click", () => {
       window.open(SMARTLINK_URL, "_blank");
+      // Grant Extra Life & Resume Game
+      lives = 1;
+      updateLivesUI();
+      gameoverScreen.classList.add("hidden");
+      gameActive = true;
     });
   </script>
 </body>
