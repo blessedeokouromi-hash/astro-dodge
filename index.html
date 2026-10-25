@@ -1,256 +1,594 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Astro-Dodge Deluxe</title>
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            user-select: none;
-        }
-        body {
-            background-color: #0d0e15;
-            color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            overflow: hidden;
-        }
-        #game-container {
-            position: relative;
-            width: 100vw;
-            max-width: 480px;
-            height: 100vh;
-            max-height: 800px;
-            background: radial-gradient(circle, #1a1c29 0%, #08090d 100%);
-            border: 2px solid #333;
-            overflow: hidden;
-            box-shadow: 0 0 20px rgba(0,255,200,0.2);
-        }
-        canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
-        .ui-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background: rgba(13, 14, 21, 0.85);
-            z-index: 10;
-        }
-        h1 {
-            font-size: 2.2rem;
-            color: #00ffcc;
-            text-shadow: 0 0 10px #00ffcc;
-            margin-bottom: 10px;
-            text-align: center;
-        }
-        p {
-            font-size: 1.1rem;
-            margin-bottom: 20px;
-            color: #aaa;
-            text-align: center;
-            padding: 0 20px;
-        }
-        .btn {
-            background: linear-gradient(45deg, #00ffcc, #0099ff);
-            border: none;
-            color: #000;
-            padding: 14px 28px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            border-radius: 30px;
-            cursor: pointer;
-            box-shadow: 0 0 15px rgba(0, 255, 200, 0.4);
-            margin: 8px 0;
-            text-decoration: none;
-            display: inline-block;
-            text-align: center;
-            width: 80%;
-            max-width: 260px;
-        }
-        .btn-ad {
-            background: linear-gradient(45deg, #ffcc00, #ff8800);
-            color: #000;
-            box-shadow: 0 0 15px rgba(255, 204, 0, 0.5);
-        }
-        .score-board {
-            position: absolute;
-            top: 15px;
-            left: 15px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #00ffcc;
-            z-index: 5;
-            text-shadow: 0 0 5px #000;
-        }
-        .hidden {
-            display: none !important;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Astro-Dodge Deluxe</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    body {
+      background-color: #0b0e14;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      overflow: hidden;
+      touch-action: none;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    #game-container {
+      position: relative;
+      width: 100%;
+      max-width: 500px;
+      height: 100vh;
+      background: #090c15;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    /* Top Header Bar */
+    #top-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 70px;
+      background: rgba(15, 23, 42, 0.85);
+      backdrop-filter: blur(8px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 16px;
+      z-index: 10;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .score-box {
+      display: flex;
+      flex-direction: column;
+    }
+    .score-label {
+      font-size: 10px;
+      font-weight: 700;
+      color: #94a3b8;
+      letter-spacing: 1px;
+    }
+    .score-value {
+      font-size: 20px;
+      font-weight: 800;
+      color: #38bdf8;
+    }
+    .highscore-value {
+      color: #fbbf24;
+    }
+    .lives-box {
+      display: flex;
+      gap: 4px;
+      font-size: 18px;
+    }
+    .sound-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      cursor: pointer;
+    }
+    canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    /* Overlays */
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(9, 12, 21, 0.92);
+      backdrop-filter: blur(10px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 30px;
+      text-align: center;
+      z-index: 20;
+    }
+    .hidden {
+      display: none !important;
+    }
+    .game-title {
+      font-size: 42px;
+      font-weight: 900;
+      line-height: 1.1;
+      background: linear-gradient(135deg, #60a5fa 0%, #a855f7 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 20px;
+      letter-spacing: -1px;
+      text-transform: uppercase;
+    }
+    .description {
+      font-size: 14px;
+      color: #94a3b8;
+      margin-bottom: 35px;
+      line-height: 1.5;
+      max-width: 320px;
+    }
+    .btn {
+      width: 100%;
+      max-width: 280px;
+      padding: 16px 24px;
+      border-radius: 14px;
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.1s active;
+      margin-bottom: 12px;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+      color: #ffffff;
+      box-shadow: 0 4px 20px rgba(37, 99, 235, 0.4);
+    }
+    .btn-bonus {
+      background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%);
+      color: #000000;
+      box-shadow: 0 4px 20px rgba(234, 179, 8, 0.4);
+    }
+    .controls-hint {
+      margin-top: 25px;
+      font-size: 11px;
+      color: #64748b;
+      line-height: 1.6;
+    }
+  </style>
 </head>
 <body>
 
-<div id="game-container">
-    <div class="score-board" id="scoreBoard">Score: 0</div>
+  <div id="game-container">
+    <!-- Header HUD -->
+    <div id="top-bar">
+      <div class="score-box">
+        <span class="score-label">SCORE</span>
+        <span id="score-text" class="score-value">0</span>
+      </div>
+      <div class="score-box">
+        <span class="score-label">HIGH SCORE</span>
+        <span id="highscore-text" class="score-value highscore-value">0</span>
+      </div>
+      <div id="lives-box" class="lives-box">❤️ ❤️ ❤️</div>
+      <button id="sound-btn" class="sound-btn">🔊</button>
+    </div>
+
+    <!-- Canvas -->
     <canvas id="gameCanvas"></canvas>
 
-    <!-- Start Screen -->
-    <div id="startScreen" class="ui-overlay">
-        <h1>ASTRO-DODGE</h1>
-        <p>Drag or tap to dodge incoming asteroids!</p>
-        <button class="btn" id="startBtn">PLAY GAME</button>
+    <!-- Start Overlay -->
+    <div id="start-screen" class="overlay">
+      <h1 class="game-title">ASTRO-<br>DODGE</h1>
+      <p class="description">Pilot your ship through deep space. Dodge rogue asteroids, collect star gems, and trigger energy shields to survive!</p>
+      <button id="start-btn" class="btn btn-primary">PLAY GAME</button>
+      <div class="controls-hint">
+        Desktop Controls: Arrow Keys / WASD or Mouse to Move<br>
+        Mobile Controls: Touch & Drag anywhere to steer
+      </div>
     </div>
 
-    <!-- Game Over Screen -->
-    <div id="gameOverScreen" class="ui-overlay hidden">
-        <h1 style="color: #ff3366; text-shadow: 0 0 10px #ff3366;">GAME OVER</h1>
-        <p id="finalScore">Final Score: 0</p>
-        <button class="btn" id="restartBtn">PLAY AGAIN</button>
-        
-        <!-- Adsterra Smartlink Integrated Button -->
-        <a href="https://www.highrevenuegate.com/1ftvprdx?key=31920570" target="_blank" class="btn btn-ad">⭐ Bonus / Get Extra Life</a>
+    <!-- Game Over Overlay -->
+    <div id="gameover-screen" class="overlay hidden">
+      <h1 class="game-title" style="background: linear-gradient(135deg, #ef4444 0%, #f97316 100%); -webkit-background-clip: text;">GAME OVER</h1>
+      <p id="final-score-text" class="description">Final Score: 0</p>
+      <button id="bonus-btn" class="btn btn-bonus">CLAIM 2X BONUS SCORE 🚀</button>
+      <button id="restart-btn" class="btn btn-primary">PLAY AGAIN</button>
     </div>
-</div>
+  </div>
 
-<script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const startScreen = document.getElementById('startScreen');
-    const gameOverScreen = document.getElementById('gameOverScreen');
-    const startBtn = document.getElementById('startBtn');
-    const restartBtn = document.getElementById('restartBtn');
-    const scoreBoard = document.getElementById('scoreBoard');
-    const finalScore = document.getElementById('finalScore');
+  <script>
+    // SMARTLINK URL
+    const SMARTLINK_URL = "https://asiafilm.org/4/bd80344d93bc26083f8b20a55302a626";
 
-    let container = document.getElementById('game-container');
-    canvas.width = container.clientWidth;
-    canvas.height = container.clientHeight;
+    // DOM Elements
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const scoreText = document.getElementById("score-text");
+    const highscoreText = document.getElementById("highscore-text");
+    const livesBox = document.getElementById("lives-box");
+    const soundBtn = document.getElementById("sound-btn");
+    const startScreen = document.getElementById("start-screen");
+    const gameoverScreen = document.getElementById("gameover-screen");
+    const finalScoreText = document.getElementById("final-score-text");
+    const startBtn = document.getElementById("start-btn");
+    const restartBtn = document.getElementById("restart-btn");
+    const bonusBtn = document.getElementById("bonus-btn");
 
-    let isPlaying = false;
+    // Audio Context
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    function playSound(type) {
+      if (!soundEnabled) return;
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+
+      const now = audioCtx.currentTime;
+      if (type === 'gem') {
+        osc.frequency.setValueAtTime(600, now);
+        osc.frequency.exponentialRampToValueAtTime(1200, now + 0.15);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+        osc.start(now);
+        osc.stop(now + 0.15);
+      } else if (type === 'hit') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(40, now + 0.3);
+        gain.gain.setValueAtTime(0.4, now);
+        gain.gain.linearRampToValueAtTime(0.01, now + 0.3);
+        osc.start(now);
+        osc.stop(now + 0.3);
+      }
+    }
+
+    soundBtn.addEventListener('click', () => {
+      soundEnabled = !soundEnabled;
+      soundBtn.textContent = soundEnabled ? '🔊' : '🔇';
+    });
+
+    // High Score init
+    let highScore = localStorage.getItem("astro_highscore") || 0;
+    highscoreText.textContent = highScore;
+
+    // Canvas Resizing
+    function resizeCanvas() {
+      const rect = canvas.parentElement.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+    }
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas();
+
+    // State Variables
+    let gameActive = false;
     let score = 0;
-    let player = { x: canvas.width / 2, y: canvas.height - 80, size: 20, speed: 8 };
-    let obstacles = [];
-    let gameLoop;
-    let spawnRate = 40;
+    let lives = 3;
     let frameCount = 0;
 
-    function resetGame() {
-        score = 0;
-        obstacles = [];
-        player.x = canvas.width / 2;
-        player.y = canvas.height - 80;
-        scoreBoard.innerText = "Score: 0";
+    // Entities
+    let player = {
+      x: 0,
+      y: 0,
+      size: 20,
+      targetX: 0,
+      targetY: 0
+    };
+
+    let stars = [];
+    let asteroids = [];
+    let gems = [];
+    let particles = [];
+
+    // Background Stars Setup
+    for (let i = 0; i < 60; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        size: Math.random() * 2 + 0.5,
+        speed: Math.random() * 1.5 + 0.5
+      });
     }
 
-    function startGame() {
-        resetGame();
-        isPlaying = true;
-        startScreen.classList.add('hidden');
-        gameOverScreen.classList.add('hidden');
-        gameLoop = requestAnimationFrame(update);
-    }
+    // Controls
+    let touchDragging = false;
+    const keys = {};
 
-    function endGame() {
-        isPlaying = false;
-        cancelAnimationFrame(gameLoop);
-        finalScore.innerText = "Final Score: " + score;
-        gameOverScreen.classList.remove('hidden');
-    }
+    window.addEventListener("keydown", (e) => keys[e.key] = true);
+    window.addEventListener("keyup", (e) => keys[e.key] = false);
 
-    // Touch and Drag Controls for Android
-    let isDragging = false;
-    canvas.addEventListener('touchstart', (e) => {
-        isDragging = true;
-        movePlayer(e.touches[0]);
+    canvas.addEventListener("touchstart", (e) => {
+      touchDragging = true;
+      updateTouchPos(e);
     });
-    canvas.addEventListener('touchmove', (e) => {
-        if (isDragging) movePlayer(e.touches[0]);
+    canvas.addEventListener("touchmove", (e) => {
+      if (touchDragging) updateTouchPos(e);
     });
-    canvas.addEventListener('touchend', () => isDragging = false);
+    canvas.addEventListener("touchend", () => touchDragging = false);
 
-    function movePlayer(touch) {
-        let rect = canvas.getBoundingClientRect();
-        let targetX = touch.clientX - rect.left;
-        player.x = Math.max(player.size, Math.min(canvas.width - player.size, targetX));
+    function updateTouchPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      player.targetX = e.touches[0].clientX - rect.left;
+      player.targetY = e.touches[0].clientY - rect.top;
     }
 
-    function spawnObstacle() {
-        let size = Math.random() * 25 + 15;
-        let x = Math.random() * (canvas.width - size * 2) + size;
-        let speed = Math.random() * 3 + 3 + (score / 100);
-        obstacles.push({ x, y: -size, size, speed });
+    // Reset / Init
+    function initGame() {
+      score = 0;
+      lives = 3;
+      asteroids = [];
+      gems = [];
+      particles = [];
+      scoreText.textContent = "0";
+      updateLivesUI();
+      
+      player.x = canvas.width / 2;
+      player.y = canvas.height - 100;
+      player.targetX = player.x;
+      player.targetY = player.y;
+
+      gameActive = true;
+      startScreen.classList.add("hidden");
+      gameoverScreen.classList.add("hidden");
     }
 
+    function updateLivesUI() {
+      let hearts = "";
+      for (let i = 0; i < lives; i++) hearts += "❤️ ";
+      livesBox.textContent = hearts.trim();
+    }
+
+    // Spawn Helpers
+    function createAsteroid() {
+      const size = Math.random() * 20 + 20;
+      const vertCount = Math.floor(Math.random() * 3) + 5;
+      const points = [];
+      for (let i = 0; i < vertCount; i++) {
+        const angle = (i / vertCount) * Math.PI * 2;
+        const dist = size * (0.8 + Math.random() * 0.4);
+        points.push({ x: Math.cos(angle) * dist, y: Math.sin(angle) * dist });
+      }
+
+      asteroids.push({
+        x: Math.random() * (canvas.width - size * 2) + size,
+        y: -size,
+        size: size,
+        speed: Math.random() * 2 + 2 + (score / 500),
+        rotation: 0,
+        rotSpeed: (Math.random() - 0.5) * 0.05,
+        points: points
+      });
+    }
+
+    function createGem() {
+      gems.push({
+        x: Math.random() * (canvas.width - 40) + 20,
+        y: -20,
+        size: 10,
+        speed: 2.5
+      });
+    }
+
+    function createExplosion(x, y, color) {
+      for (let i = 0; i < 15; i++) {
+        particles.push({
+          x: x,
+          y: y,
+          vx: (Math.random() - 0.5) * 6,
+          vy: (Math.random() - 0.5) * 6,
+          size: Math.random() * 4 + 2,
+          life: 1,
+          color: color
+        });
+      }
+    }
+
+    // Main Game Loop
     function update() {
-        if (!isPlaying) return;
+      if (!gameActive) return;
 
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      frameCount++;
 
-        // Draw Player Ship
-        ctx.fillStyle = '#00ffcc';
+      // Player Movement
+      if (keys["ArrowLeft"] || keys["a"]) player.targetX -= 6;
+      if (keys["ArrowRight"] || keys["d"]) player.targetX += 6;
+      if (keys["ArrowUp"] || keys["w"]) player.targetY -= 6;
+      if (keys["ArrowDown"] || keys["s"]) player.targetY += 6;
+
+      player.x += (player.targetX - player.x) * 0.25;
+      player.y += (player.targetY - player.y) * 0.25;
+
+      // Screen Clamping
+      player.x = Math.max(player.size, Math.min(canvas.width - player.size, player.x));
+      player.y = Math.max(70 + player.size, Math.min(canvas.height - player.size, player.y));
+
+      // Spawning
+      if (frameCount % 45 === 0) createAsteroid();
+      if (frameCount % 120 === 0) createGem();
+
+      // Update Asteroids
+      for (let i = asteroids.length - 1; i >= 0; i--) {
+        let a = asteroids[i];
+        a.y += a.speed;
+        a.rotation += a.rotSpeed;
+
+        // Player Collision
+        let dx = a.x - player.x;
+        let dy = a.y - player.y;
+        let dist = Math.hypot(dx, dy);
+
+        if (dist < a.size + player.size * 0.7) {
+          playSound('hit');
+          createExplosion(a.x, a.y, '#f97316');
+          asteroids.splice(i, 1);
+          lives--;
+          updateLivesUI();
+
+          if (lives <= 0) {
+            endGame();
+          }
+          continue;
+        }
+
+        if (a.y > canvas.height + a.size) {
+          asteroids.splice(i, 1);
+          score += 10;
+          scoreText.textContent = score;
+        }
+      }
+
+      // Update Gems
+      for (let i = gems.length - 1; i >= 0; i--) {
+        let g = gems[i];
+        g.y += g.speed;
+
+        let dx = g.x - player.x;
+        let dy = g.y - player.y;
+        let dist = Math.hypot(dx, dy);
+
+        if (dist < g.size + player.size) {
+          playSound('gem');
+          createExplosion(g.x, g.y, '#fbbf24');
+          gems.splice(i, 1);
+          score += 50;
+          scoreText.textContent = score;
+          continue;
+        }
+
+        if (g.y > canvas.height + 20) {
+          gems.splice(i, 1);
+        }
+      }
+
+      // Update Particles
+      for (let i = particles.length - 1; i >= 0; i--) {
+        let p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= 0.03;
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      // Background Stars
+      ctx.fillStyle = "#ffffff";
+      stars.forEach(s => {
+        s.y += s.speed;
+        if (s.y > canvas.height) s.y = 0;
+        ctx.globalAlpha = Math.random() * 0.5 + 0.3;
+        ctx.fillRect(s.x, s.y, s.size, s.size);
+      });
+      ctx.globalAlpha = 1.0;
+
+      if (!gameActive) return;
+
+      // Draw Particles
+      particles.forEach(p => {
+        ctx.fillStyle = p.color;
+        ctx.globalAlpha = p.life;
         ctx.beginPath();
-        ctx.moveTo(player.x, player.y - player.size);
-        ctx.lineTo(player.x - player.size, player.y + player.size);
-        ctx.lineTo(player.x + player.size, player.y + player.size);
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.globalAlpha = 1.0;
+
+      // Draw Gems
+      gems.forEach(g => {
+        ctx.fillStyle = "#fbbf24";
+        ctx.beginPath();
+        ctx.arc(g.x, g.y, g.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowColor = "#fbbf24";
+        ctx.shadowBlur = 10;
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      });
+
+      // Draw Asteroids
+      ctx.strokeStyle = "#94a3b8";
+      ctx.fillStyle = "#1e293b";
+      ctx.lineWidth = 2;
+      asteroids.forEach(a => {
+        ctx.save();
+        ctx.translate(a.x, a.y);
+        ctx.rotate(a.rotation);
+        ctx.beginPath();
+        a.points.forEach((pt, idx) => {
+          if (idx === 0) ctx.moveTo(pt.x, pt.y);
+          else ctx.lineTo(pt.x, pt.y);
+        });
         ctx.closePath();
         ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      });
 
-        // Spawn & Update Asteroids
-        frameCount++;
-        if (frameCount % Math.max(15, spawnRate - Math.floor(score / 50)) === 0) {
-            spawnObstacle();
-        }
+      // Draw Player Ship
+      ctx.save();
+      ctx.translate(player.x, player.y);
 
-        for (let i = obstacles.length - 1; i >= 0; i--) {
-            let obs = obstacles[i];
-            obs.y += obs.speed;
+      // Thrust Flame
+      ctx.fillStyle = "#f97316";
+      ctx.beginPath();
+      ctx.moveTo(-6, 12);
+      ctx.lineTo(0, 18 + Math.random() * 6);
+      ctx.lineTo(6, 12);
+      ctx.closePath();
+      ctx.fill();
 
-            // Draw Asteroid
-            ctx.fillStyle = '#ff3366';
-            ctx.beginPath();
-            ctx.arc(obs.x, obs.y, obs.size, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Collision Detection
-            let dist = Math.hypot(player.x - obs.x, player.y - obs.y);
-            if (dist < player.size + obs.size - 5) {
-                endGame();
-                return;
-            }
-
-            // Remove off-screen obstacles and increase score
-            if (obs.y - obs.size > canvas.height)  {
-                obstacles.splice(i, 1);
-                score += 10;
-                scoreBoard.innerText = "Score: " + score;
-            }
-        }
-
-        gameLoop = requestAnimationFrame(update);
+      // Ship Body
+      ctx.fillStyle = "#38bdf8";
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, -player.size);
+      ctx.lineTo(player.size * 0.8, player.size);
+      ctx.lineTo(0, player.size * 0.6);
+      ctx.lineTo(-player.size * 0.8, player.size);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
     }
 
-    startBtn.addEventListener('click', startGame);
-    restartBtn.addEventListener('click', startGame);
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+    loop();
 
-    window.addEventListener('resize', () => {
-        canvas.width = container.clientWidth;
-        canvas.height = container.clientHeight;
+    function endGame() {
+      gameActive = false;
+      if (score > highScore) {
+        highScore = score;
+        localStorage.setItem("astro_highscore", highScore);
+        highscoreText.textContent = highScore;
+      }
+      finalScoreText.textContent = `Final Score: ${score}`;
+      gameoverScreen.classList.remove("hidden");
+    }
+
+    // Button Listeners
+    startBtn.addEventListener("click", initGame);
+    restartBtn.addEventListener("click", initGame);
+
+    // Smartlink Trigger Button
+    bonusBtn.addEventListener("click", () => {
+      window.open(SMARTLINK_URL, "_blank");
     });
-</script>
-
+  </script>
 </body>
 </html>
