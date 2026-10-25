@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Astro-Dodge Deluxe</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+        }
+        body {
+            background-color: #0d0e15;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        #game-container {
+            position: relative;
+            width: 100vw;
+            max-width: 480px;
+            height: 100vh;
+            max-height: 800px;
+            background: radial-gradient(circle, #1a1c29 0%, #08090d 100%);
+            border: 2px solid #333;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,255,200,0.2);
+        }
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        .ui-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: rgba(13, 14, 21, 0.85);
+            z-index: 10;
+        }
+        h1 {
+            font-size: 2.2rem;
+            color: #00ffcc;
+            text-shadow: 0 0 10px #00ffcc;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        p {
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            color: #aaa;
+            text-align: center;
+            padding: 0 20px;
+        }
+        .btn {
+            background: linear-gradient(45deg, #00ffcc, #0099ff);
+            border: none;
+            color: #000;
+            padding: 14px 28px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 255, 200, 0.4);
+            margin: 8px 0;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            width: 80%;
+            max-width: 260px;
+        }
+        .btn-ad {
+            background: linear-gradient(45deg, #ffcc00, #ff8800);
+            color: #000;
+            box-shadow: 0 0 15px rgba(255, 204, 0, 0.5);
+        }
+        .score-board {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #00ffcc;
+            z-index: 5;
+            text-shadow: 0 0 5px #000;
+        }
+        .hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body>
+
+<div id="game-container">
+    <div class="score-board" id="scoreBoard">Score: 0</div>
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Start Screen -->
+    <div id="startScreen" class="ui-overlay">
+        <h1>ASTRO-DODGE</h1>
+        <p>Drag or tap to dodge incoming asteroids!</p>
+        <button class="btn" id="startBtn">PLAY GAME</button>
+    </div>
+
+    <!-- Game Over Screen -->
+    <div id="gameOverScreen" class="ui-overlay hidden">
+        <h1 style="color: #ff3366; text-shadow: 0 0 10px #ff3366;">GAME OVER</h1>
+        <p id="finalScore">Final Score: 0</p>
+        <button class="btn" id="restartBtn">PLAY AGAIN</button>
+        
+        <!-- Adsterra Smartlink Integrated Button -->
+        <a href="https://www.highrevenuegate.com/1ftvprdx?key=31920570" target="_blank" class="btn btn-ad">⭐ Bonus / Get Extra Life</a>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const startScreen = document.getElementById('startScreen');
+    const gameOverScreen = document.getElementById('gameOverScreen');
+    const startBtn = document.getElementById('startBtn');
+    const restartBtn = document.getElementById('restartBtn');
+    const scoreBoard = document.getElementById('scoreBoard');
+    const finalScore = document.getElementById('finalScore');
+
+    let container = document.getElementById('game-container');
+    canvas.width = container.clientWidth;
+    canvas.height = container.clientHeight;
+
+    let isPlaying = false;
+    let score = 0;
+    let player = { x: canvas.width / 2, y: canvas.height - 80, size: 20, speed: 8 };
+    let obstacles = [];
+    let gameLoop;
+    let spawnRate = 40;
+    let frameCount = 0;
+
+    function resetGame() {
+        score = 0;
+        obstacles = [];
+        player.x = canvas.width / 2;
+        player.y = canvas.height - 80;
+        scoreBoard.innerText = "Score: 0";
+    }
+
+    function startGame() {
+        resetGame();
+        isPlaying = true;
+        startScreen.classList.add('hidden');
+        gameOverScreen.classList.add('hidden');
+        gameLoop = requestAnimationFrame(update);
+    }
+
+    function endGame() {
+        isPlaying = false;
+        cancelAnimationFrame(gameLoop);
+        finalScore.innerText = "Final Score: " + score;
+        gameOverScreen.classList.remove('hidden');
+    }
+
+    // Touch and Drag Controls for Android
+    let isDragging = false;
+    canvas.addEventListener('touchstart', (e) => {
+        isDragging = true;
+        movePlayer(e.touches[0]);
+    });
+    canvas.addEventListener('touchmove', (e) => {
+        if (isDragging) movePlayer(e.touches[0]);
+    });
+    canvas.addEventListener('touchend', () => isDragging = false);
+
+    function movePlayer(touch) {
+        let rect = canvas.getBoundingClientRect();
+        let targetX = touch.clientX - rect.left;
+        player.x = Math.max(player.size, Math.min(canvas.width - player.size, targetX));
+    }
+
+    function spawnObstacle() {
+        let size = Math.random() * 25 + 15;
+        let x = Math.random() * (canvas.width - size * 2) + size;
+        let speed = Math.random() * 3 + 3 + (score / 100);
+        obstacles.push({ x, y: -size, size, speed });
+    }
+
+    function update() {
+        if (!isPlaying) return;
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw Player Ship
+        ctx.fillStyle = '#00ffcc';
+        ctx.beginPath();
+        ctx.moveTo(player.x, player.y - player.size);
+        ctx.lineTo(player.x - player.size, player.y + player.size);
+        ctx.lineTo(player.x + player.size, player.y + player.size);
+        ctx.closePath();
+        ctx.fill();
+
+        // Spawn & Update Asteroids
+        frameCount++;
+        if (frameCount % Math.max(15, spawnRate - Math.floor(score / 50)) === 0) {
+            spawnObstacle();
+        }
+
+        for (let i = obstacles.length - 1; i >= 0; i--) {
+            let obs = obstacles[i];
+            obs.y += obs.speed;
+
+            // Draw Asteroid
+            ctx.fillStyle = '#ff3366';
+            ctx.beginPath();
+            ctx.arc(obs.x, obs.y, obs.size, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Collision Detection
+            let dist = Math.hypot(player.x - obs.x, player.y - obs.y);
+            if (dist < player.size + obs.size - 5) {
+                endGame();
+                return;
+            }
+
+            // Remove off-screen obstacles and increase score
+            if (obs.y - obs.size > canvas.height)  {
+                obstacles.splice(i, 1);
+                score += 10;
+                scoreBoard.innerText = "Score: " + score;
+            }
+        }
+
+        gameLoop = requestAnimationFrame(update);
+    }
+
+    startBtn.addEventListener('click', startGame);
+    restartBtn.addEventListener('click', startGame);
+
+    window.addEventListener('resize', () => {
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+    });
+</script>
+
+</body>
+</html>
